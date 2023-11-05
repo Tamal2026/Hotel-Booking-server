@@ -6,7 +6,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 // middleware
-// JwhmfS8UF14bXnQD
+// 
 
 app.use(cors());
 app.use(express.json());
@@ -28,10 +28,12 @@ async function run() {
     await client.connect();
 
     const roomsCollection = client.db("Resort").collection("Rooms");
-
+const roomBookingCollection = client.db("Resort").collection("roombookings")
     const FeaturedroomsCollection = client
       .db("Resort")
       .collection("FeaturedRoom");
+
+
 
     app.get("/rooms", async (req, res) => {
       const cursor = roomsCollection.find();
@@ -43,7 +45,15 @@ async function run() {
       const cursor = FeaturedroomsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
+
     });
+
+    app.post('/roombookings',async (req,res)=>{
+      const booking = req.body;
+      console.log(booking);
+      const result = await roomBookingCollection.insertOne(booking);
+      res.send(result)
+    })
 
     app.get("/featuredRooms/:id", async (req, res) => {
       const id = req.params.id;
