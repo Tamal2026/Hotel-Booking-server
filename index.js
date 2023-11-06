@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require('cookie-parser');
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 // middleware
 //
 
-app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
+app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -40,7 +40,7 @@ async function run() {
     app.get("/roombookings", async (req, res) => {
       console.log(req.query);
       let query = {};
-console.log('toto token',req.cookies.token);
+      console.log("toto token", req.cookies.token);
       if (req.query?.email) {
         query = { email: req.query.email };
       }
@@ -70,12 +70,12 @@ console.log('toto token',req.cookies.token);
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log(user);
-      const token = jwt.sign(user,process.env.ACESS_TOKEN_SECRET, {
+      const token = jwt.sign(user, process.env.ACESS_TOKEN_SECRET, {
         expiresIn: "2h",
       });
-    
 
-      res.cookie("token", token, {
+      res
+        .cookie("token", token, {
           httpOnly: true,
           secure: false,
           sameSite: "none",
@@ -83,7 +83,7 @@ console.log('toto token',req.cookies.token);
         .send({ success: true });
     });
 
-    app.get("/featuredRooms/:id", async (req, res) => {
+    app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await roomsCollection.findOne(query, options);
@@ -118,5 +118,5 @@ app.get("/", (req, res) => {
   res.send("S3erver is Running");
 });
 app.listen(port, () => {
-  console.log(`Car Doctor server is running on port ${port}`);
+  console.log(`Resort is running on port ${port}`);
 });
