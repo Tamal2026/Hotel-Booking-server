@@ -37,6 +37,9 @@ async function run() {
       .db("Resort")
       .collection("FeaturedRoom");
 
+      const reviewCollection = client.db("Resort").collection("Reviews");
+
+    // GET request to fetch data from the database For Booked Rooms
     app.get("/roombookings", async (req, res) => {
       console.log(req.query);
       let query = {};
@@ -47,11 +50,13 @@ async function run() {
       const result = await roomBookingCollection.find(query).toArray();
       res.send(result);
     });
+    // GET request to fetch data from the database For All Rooms
     app.get("/rooms", async (req, res) => {
       const cursor = roomsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
+    // GET request to fetch data from the database For Home Page Featured Rooms
 
     app.get("/featuredRooms", async (req, res) => {
       const cursor = FeaturedroomsCollection.find();
@@ -59,10 +64,32 @@ async function run() {
       res.send(result);
     });
 
+    // POST request to store data in the database
     app.post("/roombookings", async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await roomBookingCollection.insertOne(booking);
+      res.send(result);
+    });
+    app.post("/addreviews",async (req,res)=>{
+      const review = req.body;
+      console.log(review);
+
+      const result = await reviewCollection.insertOne(review);
+      res.send(result)
+    })
+
+    // Update
+    // app.put("/room");
+
+
+
+    // DELETE request to remove data from the database
+    app.delete("/roombookings/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await roomBookingCollection.deleteOne(query);
       res.send(result);
     });
 
