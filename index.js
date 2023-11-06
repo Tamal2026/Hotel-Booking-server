@@ -1,15 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require('cookie-parser');
 const app = express();
 const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
-
+const jwt = require("jsonwebtoken");
 // middleware
-// 
+//
 
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@try-myself.0cjln25.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -28,13 +30,23 @@ async function run() {
     await client.connect();
 
     const roomsCollection = client.db("Resort").collection("Rooms");
-const roomBookingCollection = client.db("Resort").collection("roombookings")
+    const roomBookingCollection = client
+      .db("Resort")
+      .collection("roombookings");
     const FeaturedroomsCollection = client
       .db("Resort")
       .collection("FeaturedRoom");
 
-
-
+    app.get("/roombookings", async (req, res) => {
+      console.log(req.query);
+      let query = {};
+console.log('toto token',req.cookies.token);
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await roomBookingCollection.find(query).toArray();
+      res.send(result);
+    });
     app.get("/rooms", async (req, res) => {
       const cursor = roomsCollection.find();
       const result = await cursor.toArray();
@@ -45,15 +57,31 @@ const roomBookingCollection = client.db("Resort").collection("roombookings")
       const cursor = FeaturedroomsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-
     });
 
-    app.post('/roombookings',async (req,res)=>{
+    app.post("/roombookings", async (req, res) => {
       const booking = req.body;
       console.log(booking);
       const result = await roomBookingCollection.insertOne(booking);
-      res.send(result)
-    })
+      res.send(result);
+    });
+
+    // Jwt TOken
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user,process.env.ACESS_TOKEN_SECRET, {
+        expiresIn: "2h",
+      });
+    
+
+      res.cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
 
     app.get("/featuredRooms/:id", async (req, res) => {
       const id = req.params.id;
