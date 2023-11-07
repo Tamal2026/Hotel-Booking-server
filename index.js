@@ -56,6 +56,13 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+
+      // GET request to fetch data from the database For Reviews
+    app.get("/addreviews", async (req, res) => {
+      const cursor = reviewCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
     // GET request to fetch data from the database For Home Page Featured Rooms
 
     app.get("/featuredRooms", async (req, res) => {
@@ -71,13 +78,15 @@ async function run() {
       const result = await roomBookingCollection.insertOne(booking);
       res.send(result);
     });
-    app.post("/addreviews",async (req,res)=>{
-      const review = req.body;
-      console.log(review);
 
-      const result = await reviewCollection.insertOne(review);
-      res.send(result)
-    })
+   app.post("/addreviews", async (req, res) => {
+  const review = req.body;
+  console.log("Received review:", review);
+
+  const result = await reviewCollection.insertOne(review);
+  res.send(result);
+});
+
 
     // Update
     // app.put("/room");
