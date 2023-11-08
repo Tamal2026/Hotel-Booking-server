@@ -6,8 +6,6 @@ const port = process.env.PORT || 5000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-// middleware
-//
 
 app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 app.use(express.json());
@@ -15,7 +13,6 @@ app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@try-myself.0cjln25.mongodb.net/?retryWrites=true&w=majority`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -26,7 +23,6 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
     const roomsCollection = client.db("Resort").collection("Rooms");
@@ -37,33 +33,28 @@ async function run() {
       .db("Resort")
       .collection("FeaturedRoom");
 
-      const reviewCollection = client.db("Resort").collection("Reviews");
+    const reviewCollection = client.db("Resort").collection("Reviews");
 
-    // GET request to fetch data from the database For Booked Rooms
     app.get("/roombookings", async (req, res) => {
-      console.log(req.query);
       let query = {};
-      console.log("toto token", req.cookies.token);
       if (req.query?.email) {
         query = { email: req.query.email };
       }
       const result = await roomBookingCollection.find(query).toArray();
       res.send(result);
     });
-    // GET request to fetch data from the database For All Rooms
+
     app.get("/rooms", async (req, res) => {
       const cursor = roomsCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-      // GET request to fetch data from the database For Reviews
     app.get("/addreviews", async (req, res) => {
       const cursor = reviewCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
-    // GET request to fetch data from the database For Home Page Featured Rooms
 
     app.get("/featuredRooms", async (req, res) => {
       const cursor = FeaturedroomsCollection.find();
@@ -71,38 +62,55 @@ async function run() {
       res.send(result);
     });
 
-    // POST request to store data in the database
     app.post("/roombookings", async (req, res) => {
       const booking = req.body;
+
       console.log(booking);
+
+      const unavailableUntil = new Date();
+      unavailableUntil.setHours(unavailableUntil.getHours() + 24);
+
       const result = await roomBookingCollection.insertOne(booking);
+      await roomsCollection.updateOne(
+        { _id: new ObjectId(booking.roomId) },
+        { $set: { unavailableUntil: unavailableUntil } }
+      );
+
+      res.send(result);
+    });
+    app.patch("/roombookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateBooking = req.body;
+      console.log(updateBooking);
+      const updatedDoc = {
+        $set: {
+          status: updateBooking.
+          status,
+          
+        },
+        
+      };
+      const result = await roomBookingCollection.updateOne(filter,updatedDoc)
+      res.send(result)
+    });
+
+    app.post("/addreviews", async (req, res) => {
+      const review = req.body;
+      console.log("Received review:", review);
+
+      const result = await reviewCollection.insertOne(review);
       res.send(result);
     });
 
-   app.post("/addreviews", async (req, res) => {
-  const review = req.body;
-  console.log("Received review:", review);
-
-  const result = await reviewCollection.insertOne(review);
-  res.send(result);
-});
-
-
-    // Update
-    // app.put("/room");
-
-
-
-    // DELETE request to remove data from the database
     app.delete("/roombookings/:id", async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) };
+
       const result = await roomBookingCollection.deleteOne(query);
       res.send(result);
     });
 
-    // Jwt TOken
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -122,36 +130,34 @@ async function run() {
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
+
+      const options = {
+        projection: {
+          roomName: 1,
+          img: 1,
+          facilities: 1,
+          description: 1,
+          price: 1,
+          roomSize: 1,
+          specialOffer: 1,
+        },
+      };
+
       const result = await roomsCollection.findOne(query, options);
       res.send(result);
     });
-    const options = {
-      projection: {
-        roomName: 1,
-        img: 1,
-        facilities: 1,
-        description: 1,
-        price: 1,
-        roomSize: 1,
 
-        specialOffer: 1,
-      },
-    };
-
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
   }
 }
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("S3erver is Running");
+  res.send("Server is Running");
 });
 app.listen(port, () => {
   console.log(`Resort is running on port ${port}`);
