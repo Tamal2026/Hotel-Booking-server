@@ -36,6 +36,9 @@ async function run() {
     const reviewCollection = client.db("Resort").collection("Reviews");
 
     app.get("/roombookings", async (req, res) => {
+console.log(req.query.email);
+console.log('tok tok token',req.cookies.token);
+
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
@@ -119,12 +122,12 @@ async function run() {
       });
 
       res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: false,
-          sameSite: "none",
-        })
-        .send({ success: true });
+      .cookie("token", token, {
+        httpOnly: true,
+        sameSite: "none",
+      })
+      .send({ success: true });
+    
     });
 
     app.get("/rooms/:id", async (req, res) => {
